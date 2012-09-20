@@ -93,16 +93,14 @@ class TestWorld(unittest.TestCase):
         self.test_set.add((5,7))
         self.assertNotEqual(self.test_set, self.result_expected, "Sets should not equal to start.")
         self.pot_set = self.d.create_potentials(self.test_set)
-        self.test_set = self.d.determine_next_gen(self.pot_set)
-        print self.test_set
-        print self.result_expected
-        self.assertEqual(self.test_set, self.result_expected, "Sets should be same at end.")
+        self.result_set = self.d.determine_next_gen(self.test_set, self.pot_set)
+        self.assertEqual(self.result_set, self.result_expected, "Sets should be same at end.")
         
 
     def test_generation_next(self):
         self.d.cells = self.d.spawn(100, 20)
         self.d.potentials = self.d.create_potentials(self.d.cells)
-        self.next_gen = self.d.determine_next_gen(self.d.potentials)
+        self.next_gen = self.d.determine_next_gen(self.d.cells, self.d.potentials)
         self.assertTrue(self.d.potentials >= self.d.cells, "Not a subset.")
         self.assertTrue(self.d.potentials >= self.d.next_gen, "Should give same result with repeated runs.")
 
@@ -121,11 +119,12 @@ class TestEnvironment(unittest.TestCase):
 
 class TestDrawingMachine(unittest.TestCase):
     def setUp(self):
-        self.env = Environment()
+        self.env = Environment(10)
         self.color = main.env.cell_color
         self.px_array = main.px_array
         self.p_test = set()
         self.color = self.env.cell_color
+        self.d = main.thedish
         
     def tearDown(self):
         self.env = None
@@ -137,9 +136,9 @@ class TestDrawingMachine(unittest.TestCase):
 
     def test_drawing_all_cells(self):
         main.env.screen.fill(main.env.black) 
-        main.draw_pixels(main.thedish.cells)
+        main.draw_pixels(self.d.cells)
         pygame.display.flip()
-        for each_cell in iter(main.thedish.cells):
+        for each_cell in iter(self.d.cells):
             xC, yC = each_cell
             c = main.px_array[xC][yC]
             self.assertEqual(c, main.env.screen.map_rgb(self.color), "Pixels don't match")
@@ -149,8 +148,8 @@ class TestDrawingMachine(unittest.TestCase):
 
 def test_main():
     test_support.run_unittest(TestWorld,
-                              TestEnvironment#,
-                              #TestDrawingMachine
+                              TestEnvironment,
+                              TestDrawingMachine
                              )
 
 if __name__ == '__main__':
