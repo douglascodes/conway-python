@@ -47,18 +47,26 @@ class Dish():
             a_set.add((x, y))
         return a_set
 
+    def take_turn(self):
+        self.potentials = self.create_potentials(self.cells)
+        self.cells = self.determine_next_gen(self.potentials)
+
     def create_potentials(self, passed_set):
         pot_set = set()
         for alpha in iter(passed_set):
             loc_x, loc_y = alpha
-            for x in range(-1,2):
-                for y in range(-1,2):
-                    pot_set.add((loc_x + x, loc_y + y))
-                    
-        pot_set = pot_set.union(passed_set)
-        return pot_set
 
-## fix this loop       
+            for loop_x in range(-1,2):
+                x = loop_x + loc_x
+                if 0 > x or x > (env.limit-1): continue
+                for loop_y in range(-1,2):
+                    y = loop_y + loc_y 
+                    if 0 > y or y > (env.limit-1): continue
+                    pot_set.add((x, y))
+
+        p = pot_set.union(passed_set)
+        return p
+
     def count_neighbors(self, cellA, passed_set):
         c = 0
         xA, yA = cellA
@@ -69,29 +77,27 @@ class Dish():
                 c += 1
         return c
     
-    def determine_next_gen(self):
-        self.potentials.clear()
-        self.potentials = self.create_potentials(self.cells)
+    def determine_next_gen(self, pot_list ):
         self.next_gen.clear()
-        for each_cell in iter(self.potentials):
+        for each_cell in iter(pot_list):
             neighbors = self.count_neighbors(each_cell, self.potentials)
-            self.next_gen.add(each_cell)
-        self.cells = self.next_gen
-        return
+            if 2 <= neighbors <= 3: 
+            #if 2 <= self.count_neighbors(each_cell, self.potentials) <= 3:
+                self.next_gen.add(each_cell)
+        return self.next_gen
 
 def draw_pixels(p_list):
     for each_px in iter(p_list):
         px, py = each_px
         px_array[px][py] = color
 
-      
 class TooManyExpected(Exception):
     def __init__(self):
         self.value = "Cell count exceeds limits."
     def __str__(self):
         return repr(self.value)
 
-env = Environment(8)
+env = Environment(10)
 clock = pygame.time.Clock()
 rand = random.randint
 thedish = Dish()
@@ -100,14 +106,11 @@ pygame.init()
 color = env.cell_color
 px_array = pygame.PixelArray(env.screen)
 thedish.cells = thedish.spawn(env.start_count, env.limit)
-draw_pixels(thedish.cells)
-pygame.display.flip()           #Draws the screen
 
-env.screen.fill(env.black)           #fills the background with named color
-thedish.determine_next_gen()
-draw_pixels(thedish.cells)
+while True:
+    env.screen.fill(env.black)          #fills the background with named color
+    draw_pixels(thedish.cells)
+    pygame.display.flip()               #Draws the screen
+    thedish.take_turn()
 
-
-#while not check_key():
-#    thedish.determine_next_gen()
         
