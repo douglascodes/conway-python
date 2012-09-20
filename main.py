@@ -1,23 +1,41 @@
 import pygame, random
+from pygame.locals import *
+
+def check_key():
+    for event in pygame.event.get():
+        if not hasattr(event, 'key'): continue 
+        if event.key == K_ESCAPE: return False
+    return True
+
 
 class Environment():                       
-    def __init__(self, measure=10): 
-        self.limit = measure * measure
+    def __init__(self, measure=8.5): 
+        self.limit = int(measure * measure)
         self.max_cells = self.limit * self.limit
-        self.vigor = 6.5/50.0
+        self.vigor = 30.0/100.0       #Change this to increase start cell count
         self.start_count = int(self.vigor * self.max_cells)
         self.black = (0,0,0)
         self.cell_color = (175,95,175)
-        self.screen = pygame.display.set_mode([(50 + ((self.limit-1 )* p_offset)), (50 + (self.limit- 1)*p_offset)])
+        self.border = 50
+        self.screen = pygame.display.set_mode([(self.border*2 + ((self.limit-1 )* p_offset)), (self.border*2 + (self.limit- 1)*p_offset)])
 
 class Dish():
+    """Petry dish where all things happen. More commenting forthcoming.
+    Check the main_test.py file for a better understanding of what is going on.
+    http://en.wikipedia.org/wiki/Conway's_Game_of_Life
+    ^ The rules.
+    """
+
     def __init__(self):
         self.create_time = pygame.time.get_ticks()
         self.cells = set()
         self.potentials = set()
         self.next_gen = set()
         self.prev_gen = set()
-        
+        self.generation = 1
+        self.cells = self.spawn(env.start_count, env.limit)
+        self.pause = False
+
     def spawn(self, count, limit):
         if count > limit*limit:
             raise TooManyExpected()
@@ -34,10 +52,11 @@ class Dish():
         return a_set
 
     def take_turn(self):
+        if self.pause: return 
         self.potentials = self.create_potentials(self.cells)
         self.prev_gen = self.cells 
         self.cells = self.determine_next_gen(self.cells, self.potentials)
-
+        
     def create_potentials(self, passed_set):
         pot_set = set()
         for alpha in iter(passed_set):
@@ -63,14 +82,14 @@ class Dish():
         return c
     
     def determine_next_gen(self, curr_list, pot_list):
-        x = set()
+        gen = set()
         for each_cell in iter(pot_list):
             neighbors = self.count_neighbors(each_cell, curr_list) 
             if neighbors == 3:
-                x.add(each_cell)
+                gen.add(each_cell)
             if each_cell in curr_list and neighbors == 2:
-                x.add(each_cell)
-        return x
+                gen.add(each_cell)
+        return gen
 
 def draw_pixels(p_list):
     for each_px in iter(p_list):
@@ -79,7 +98,7 @@ def draw_pixels(p_list):
 
 def draw_cells_as_boxes(p_list, color):
     for each_cell in iter(p_list):
-        px, py = each_cell[0]*p_offset, each_cell[1]*p_offset
+        px, py = env.border + (each_cell[0]*p_offset), env.border + (each_cell[1]*p_offset)
         px_array[px:(px + p_offset), py:(py + p_offset)] = color
 
 class TooManyExpected(Exception):
@@ -88,19 +107,25 @@ class TooManyExpected(Exception):
     def __str__(self):
         return repr(self.value)
 
-p_offset = 10
-env = Environment(10)
-clock = pygame.time.Clock()
+p_offset = 5
+env = Environment()
 rand = random.randint
 thedish = Dish()
 pygame.init()
 color = env.cell_color
+pygame.display.set_caption("___ Conway's Game of Life ___ Douglas H. King ___  ESC to Exit ___")
 px_array = pygame.PixelArray(env.screen)
-thedish.cells = thedish.spawn(env.start_count, env.limit)
 draw_cells_as_boxes(thedish.cells, env.cell_color)
-while True:
+
+font = pygame.font.Font(None, 36)
+    
+
+while check_key():
+    pygame.event.clear()
     pygame.display.flip()               #Draws the screen
     thedish.take_turn()
+    thedish.generation += 1
     env.screen.fill(env.black)
     draw_cells_as_boxes(thedish.cells, env.cell_color)
-     
+    print thedish.generation 
+    #uncomment to see a generation counter in console 
