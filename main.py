@@ -21,7 +21,8 @@ class Environment():
         self.start_count = int(self.vigor * self.max_cells)
         self.black = (0,0,0)
         self.cell_color = (255,255,255)
-        self.screen = pygame.display.set_mode([self.limit,self.limit])
+#        self.screen = pygame.display.set_mode([self.limit,self.limit])
+        self.screen = pygame.display.set_mode([self.limit*p_offset,self.limit*p_offset])
         self.looptime = 30              
 
 class Dish():
@@ -64,8 +65,7 @@ class Dish():
                     if 0 > y or y > (env.limit-1): continue
                     pot_set.add((x, y))
 
-        p = pot_set.union(passed_set)
-        return p
+        return pot_set
 
     def count_neighbors(self, cellA, passed_set):
         c = 0
@@ -80,9 +80,7 @@ class Dish():
     def determine_next_gen(self, pot_list ):
         self.next_gen.clear()
         for each_cell in iter(pot_list):
-            neighbors = self.count_neighbors(each_cell, self.potentials)
-            if 2 <= neighbors <= 3: 
-            #if 2 <= self.count_neighbors(each_cell, self.potentials) <= 3:
+            if 2 <= self.count_neighbors(each_cell, pot_list) <= 3:
                 self.next_gen.add(each_cell)
         return self.next_gen
 
@@ -91,13 +89,20 @@ def draw_pixels(p_list):
         px, py = each_px
         px_array[px][py] = color
 
+def draw_cells_as_boxes(p_list):
+    for each_cell in iter(p_list):
+        px, py = p_offset + (each_cell[0]*(p_offset)), p_offset + (each_cell[1]*(p_offset-1))
+        px_array[px: (px + p_offset), py: (py + p_offset)] = color
+        
+
 class TooManyExpected(Exception):
     def __init__(self):
         self.value = "Cell count exceeds limits."
     def __str__(self):
         return repr(self.value)
 
-env = Environment(10)
+p_offset = 10
+env = Environment(8)
 clock = pygame.time.Clock()
 rand = random.randint
 thedish = Dish()
@@ -105,12 +110,11 @@ pygame.init()
 
 color = env.cell_color
 px_array = pygame.PixelArray(env.screen)
-thedish.cells = thedish.spawn(env.start_count, env.limit)
-
-while True:
-    env.screen.fill(env.black)          #fills the background with named color
-    draw_pixels(thedish.cells)
-    pygame.display.flip()               #Draws the screen
-    thedish.take_turn()
-
+#thedish.cells = thedish.spawn(env.start_count, env.limit)
+#
+#while True:
+#    env.screen.fill(env.black)          #fills the background with named color
+#    draw_cells_as_boxes(thedish.cells)
+#    pygame.display.flip()               #Draws the screen
+#    thedish.take_turn()
         

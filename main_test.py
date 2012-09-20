@@ -82,6 +82,23 @@ class TestWorld(unittest.TestCase):
         self.test_set = self.d.create_potentials( self.test_set )
         self.assertEqual(1, self.d.count_neighbors( (3, 3), self.test_set), "Neighbors should be 1")
 
+    def test_expected_gen(self):
+        self.test_set = set()
+        self.result_expected = set()
+        self.result_expected.add((6,6))
+        self.result_expected.add((5,6))
+        self.result_expected.add((4,6))
+        self.test_set.add((5,5))
+        self.test_set.add((5,6))
+        self.test_set.add((5,7))
+        self.assertNotEqual(self.test_set, self.result_expected, "Sets should not equal to start.")
+        self.pot_set = self.d.create_potentials(self.test_set)
+        self.test_set = self.d.determine_next_gen(self.pot_set)
+        print self.test_set
+        print self.result_expected
+        self.assertEqual(self.test_set, self.result_expected, "Sets should be same at end.")
+        
+
     def test_generation_next(self):
         self.d.cells = self.d.spawn(100, 20)
         self.d.potentials = self.d.create_potentials(self.d.cells)
@@ -127,10 +144,13 @@ class TestDrawingMachine(unittest.TestCase):
             c = main.px_array[xC][yC]
             self.assertEqual(c, main.env.screen.map_rgb(self.color), "Pixels don't match")
 
+    def test_draw_box(self):
+        pass
+
 def test_main():
     test_support.run_unittest(TestWorld,
-                              TestEnvironment,
-                              TestDrawingMachine
+                              TestEnvironment#,
+                              #TestDrawingMachine
                              )
 
 if __name__ == '__main__':
